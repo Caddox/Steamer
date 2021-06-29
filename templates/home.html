@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Steamer is Warming up. . .</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='base.css') }}">
+    </head>
+
+    <body>
+        <div>
+            <p>Welcome {{username}}</p>
+        </div>
+        <table id="steamer-game-table">
+            {% for app in apps: %}
+            <tr id="steamer-table-row">
+                <th>
+                    <a href="/app/{{app[0]}}">
+                        <img loading="lazy" src="https://cdn.cloudflare.steamstatic.com/steamcommunity/public/images/apps/{{app[0]}}/{{app[2]}}.jpg">
+                    </a>
+                    <th>{{app[1]}}</th>
+                </th>
+            </tr>
+            {% endfor %}
+        </table>
+    </body>
+</html>

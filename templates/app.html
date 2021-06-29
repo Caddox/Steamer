@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Steamer is warming up. . .</title> 
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='base.css') }}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='download.js') }} "></script>
+    </head>
+
+    <body>
+        <div id='steamer-app-name'>
+            <span>Working on {{app_name}}</span>
+        </div>
+        <table id="steamer-game-table">
+            <tr>
+                <th>Depot name</th>
+                <th>Download size</th>
+            </tr>
+            {% for d in depots: %}
+            <tr id="steamer-table-row">
+                <th>{{d[0]}}</th>
+                <th>{{d[2]}}</th>
+            </tr>
+            {% endfor %}
+        </table>
+        <h1>{{total_size}}</h1>
+
+        <form >
+            <label for='start_time'>Start Time</label>
+            <input id='steamer-start-time' type="time" name="start_time" value="23:00">
+            <label for='end_time'>End Time</label>
+            <input id='steamer-end-time' type="time" name="end_time" value="04:30">
+
+            <button id="steamer-setup-download-submit" type="button">Setup download</button>
+        </form>
+    </body>
+</html>
