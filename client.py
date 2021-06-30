@@ -13,8 +13,11 @@ class LocalSteamClient(SteamClient):
         self.download_location = Path('./.downloads/')
         self.init_db()
         self.db_login()
-        self.force_login()
-        self.cdn = CDNClient(self)
+        #self.force_login()
+        if self.logged_on:
+            self.cdn = CDNClient(self)
+        else :
+            self.cdn = None
         self.process_list = []
 
 
@@ -55,10 +58,28 @@ class LocalSteamClient(SteamClient):
         # Try to login
         self.login(user, password)
 
+    def add_login_to_db(self, username, password):
+        # Create the user table
+        self.db_conn.execute("create table if not exits users (user text, pass text)")
+
+        # Check the table for the user
+        if len(self.db_conn.execute("select user from users where user=?", (username,)).fetchone()) != 0:
+            # Run the db_login?
+            self.db_login
+            if self.logged_on is False:
+                print("Data was saved, but the logon failed?")
+
+        #Add the user to the table
+        self.db_conn.execute("insert or ignore into users VALUES (?, ?)", (username, password,))
+
+        self.db_conn.commit()
+
     def populate_apps(self):
         # Ensure the client is logged in
         if not self.logged_on and self.relogin_available:
+            self.db_login()
             self.relogin()
+            self.cdn = CDNClient(self)
 
         # Grab the ids from the cdn
         print("Loading licenses into CDN")
@@ -139,6 +160,10 @@ class LocalSteamClient(SteamClient):
 
         download_path = Path(download_path)
         download_path = download_path / str(app_id)
+        
+        if self.cdn is None:
+            self.cdn = CDNClient(self)
+
         proc = Process(target=manifest_process_factory, args=(proc_conn, self.cdn, download_path,), kwargs={'timerange': time_range}, daemon=True)
         proc.start()
         local_conn.send(["download", app_id])
@@ -172,9 +197,8 @@ class LocalSteamClient(SteamClient):
     def get_depots_for(self, app_id):
         self.init_db()
         out = self.db_conn.execute("select * from depots where app_id=? and is_dlc=0", (app_id,)).fetchall()
-        
+
         return out
-            
 
 if __name__ == "__main__":
     client = LocalSteamClient()

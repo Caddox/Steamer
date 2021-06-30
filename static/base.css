@@ -19,5 +19,21 @@ body {
 }
 
 #login-div {
-    justify-content: center;
+    position: relative;
+    padding: 16px;
+    margin-top: auto;
+    margin-left: auto;
 }
+
+label {
+    padding: 12px;
+}
+
+input[type=text], input[type=password] {
+    width: 100%;
+    padding: 12px 20px;
+    margin: 8px 0;
+    box-sizing: border-box;
+    position: relative;
+}
+

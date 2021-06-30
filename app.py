@@ -3,7 +3,8 @@ from threading import Timer
 from gevent import monkey
 monkey.patch_all()
 
-from flask import Flask, render_template, redirect, request
+from flask import Flask, render_template, request, redirect, url_for
+from steam.enums import EResult
 from client import LocalSteamClient
 from db import init_app, get_db
 
@@ -32,7 +33,8 @@ def human_readable(bytes):
 @app.route("/")
 def main_page():
     if not steam.logged_on:
-        return "Please run the setup.py file. Steam can't work without it!"
+        return redirect(url_for("login"))
+        #return "Please run the setup.py file. Steam can't work without it!"
 
     db = get_db()
     apps = db.execute("select * from apps where name not like '%Server%' and logo not like '' order by name ASC").fetchall()
@@ -59,6 +61,10 @@ def app_page(app_id):
 def settings_page():
     return render_template("settings.html")
 
+@app.route("/login")
+def login_dummy():
+    return render_template("login.html")
+
 @app.route("/app/<app_id>/download", methods=["POST"])
 def schedule_download(app_id):
     # Get the JSON request from the website
@@ -70,7 +76,37 @@ def schedule_download(app_id):
         int(j['end_min']),
     )
 
-    steam.download_app(j['app_id'], tr)
+    steam.download_app(app_id, tr)
 
     # Parse the time
     return "Okay!"
+
+@app.route("/api/v1/login", methods=["POST"])
+def try_login():
+    if steam.logged_on:
+        return {"success" : True}
+    # Get the JSON content from the website
+    j = request.get_json()
+    
+    # Try to log into steam using those creds
+    result = steam.login(j['username'], password=j['password'], auth_code=j['email-code'], two_factor_code=j['2fa'])
+
+    if result == EResult.InvalidPassword:
+        return { "success": False, "reason": "Bad password", "target": "password"}
+
+    elif result in (EResult.AccountLogonDenied, EResult.InvalidLoginAuthCode):
+        if result == EResult.InvalidLoginAuthCode: return { "success": False, "reason": "Bad Email Code", "target": "email-code"}
+        return { "success": False, "reason": "Email Code Required", "target": "email-code" }
+
+    elif result in (EResult.AccountLoginDeniedNeedTwoFactor, EResult.TwoFactorCodeMismatch):
+        if result == EResult.TwoFactorCodeMismatch:
+            return { "success": False, "reason": "Bad 2FA Code", "target":"2fa"}
+        return { "success": False, "reason": "2FA Code Required", "target":"2fa"}
+
+    elif result == EResult.ServiceUnavailable:
+        return { "success": False, "reason": "Steam servers are currently dead.", "target":"steam"}
+
+    # If we're good, try to add the user and pass to the database
+    steam.add_login_to_db(j['username'], j['password'])
+
+    return { "success": True }

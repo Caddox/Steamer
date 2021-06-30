@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Steamer is Warming up. . .</title>
+        <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='base.css') }}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='login.js') }} "></script>
+    </head>
+
+    <body>
+        <div id="login-div">
+            <label for='username'>Username:</label>
+            <input id='steamer-username' type="text" name='username' placeholder="Enter Username"/> <br>
+
+            <label for='password'>Password:</label>
+            <input id='steamer-password' type="password" name='password' placeholder="Enter Password"/> <br>
+
+            <div id='steamer-2fa-div'>
+                <label for='2fa'> Please enter the 2 Factor Authentication Code:</label>
+                <input id='steamer-2fa' type="text" name="2fa" placeholder="Enter 2FA Code"/> <br>
+            </div>
+
+            <div id='steamer-email-code-div'>
+                <label for='email-code'> Please enter the email code you were sent:</label>
+                <input id='steamer-email-code' type='text' name='email-code' placeholder="Enter Email Code"/> <br>
+            </div>
+
+            <button id='steamer-user-pass-submit'>Login</button>
+        </div>
+        <div id="steamer-server-log">
+        </div>
+
+    </body>
+
+</html>
