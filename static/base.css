@@ -7,6 +7,13 @@ body {
     color: lightgray;
 }
 
+.raw-text-div {
+    margin: auto;
+    width: 55%;
+    text-align: center;
+    padding: 5px;
+}
+
 #steamer-table-row {
     color: lightgray;
     background-color: #213145;

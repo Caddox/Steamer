@@ -88,6 +88,9 @@ class LocalSteamClient(SteamClient):
 
         # Grab the ids from the cdn
         print("Loading licenses into CDN")
+        if self.cdn is None:
+            self.cdn = CDNClient(self)
+
         self.cdn.load_licenses()
 
         ids = list(self.cdn.licensed_app_ids)
@@ -98,7 +101,7 @@ class LocalSteamClient(SteamClient):
 
         ids = list(set(ids).symmetric_difference(set(db_ids)))
         ids.sort()
-        print(ids)
+        #print(ids)
 
         if len(ids) == 0:
             print("There is nothing to do.")
@@ -135,7 +138,7 @@ class LocalSteamClient(SteamClient):
             try:
                 depots = apps['apps'][app_id]['depots']
             except KeyError:
-                print(apps['apps'][app_id])
+                #print(apps['apps'][app_id])
                 continue
 
             for d_id in depots.keys():
@@ -147,7 +150,7 @@ class LocalSteamClient(SteamClient):
                     if 'dlcappid' in depots[d_id].keys():
                         dlc = True
                 except (ValueError, KeyError): # Skip the items that are not actually depots
-                    print(depots[d_id])
+                    #print(depots[d_id])
                     continue
 
                 depot_list.append((d_id, app_id, d_name, size, dlc))

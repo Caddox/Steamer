@@ -41,6 +41,14 @@ def main_page():
     username = steam.username
     return render_template("home.html", apps=apps, username=username)
 
+@app.route("/settings")
+def settings_page():
+    return render_template("settings.html")
+
+@app.route("/login")
+def login_dummy():
+    return render_template("login.html")
+
 @app.route("/app/<app_id>")
 def app_page(app_id):
     db = get_db()
@@ -56,14 +64,6 @@ def app_page(app_id):
         d_out.append((name, depot_id, size))
     
     return render_template("app.html", depots=d_out, total_size=human_readable(total_size), app_name=app_name['name'])
-
-@app.route("/settings")
-def settings_page():
-    return render_template("settings.html")
-
-@app.route("/login")
-def login_dummy():
-    return render_template("login.html")
 
 @app.route("/app/<app_id>/download", methods=["POST"])
 def schedule_download(app_id):
@@ -81,6 +81,7 @@ def schedule_download(app_id):
     # Parse the time
     return "Okay!"
 
+##### Some API Methods #####
 @app.route("/api/v1/login", methods=["POST"])
 def try_login():
     if steam.logged_on:
@@ -110,3 +111,9 @@ def try_login():
     steam.add_login_to_db(j['username'], j['password'])
 
     return { "success": True }
+
+@app.route("/api/v1/populate")
+def update_app():
+    # Try to run the populate app thingy for steam
+    steam.populate_apps()
+    return { "done": True }

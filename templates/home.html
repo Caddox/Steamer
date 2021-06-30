@@ -3,11 +3,16 @@
     <head>
         <title>Steamer is Warming up. . .</title>
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='base.css') }}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='homepage.js') }} "></script>
     </head>
 
     <body>
-        <div>
-            <p>Welcome {{username}}</p>
+        <div class="raw-text-div">
+            <p>Welcome {{username}}!</p>
+            <p>Missing an app? Click here and wait for the table to update.</p>
+            <p>If this is your first time, it may take a bit.</p>
+            <button id="steamer-populate-games" value="Hello world!">Populate Apps</button>
         </div>
         <table id="steamer-game-table">
             {% for app in apps: %}
