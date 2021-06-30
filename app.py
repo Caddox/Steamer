@@ -33,7 +33,7 @@ def human_readable(bytes):
 @app.route("/")
 def main_page():
     if not steam.logged_on:
-        return redirect(url_for("login"))
+        return redirect(url_for("login_dummy"))
         #return "Please run the setup.py file. Steam can't work without it!"
 
     db = get_db()

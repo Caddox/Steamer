@@ -1,5 +1,5 @@
 import sqlite3
-from flask import current_app, g
+from flask import g
 
 def get_db():
     if 'db' not in g:

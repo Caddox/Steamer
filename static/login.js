@@ -51,11 +51,11 @@ function login_result_handler(data) {
 
     if(data.target === "2fa") {
         // Show the 2fa box.
-        $('steamer-2fa-div').show();
+        $('#steamer-2fa-div').show();
     }
     else if (data.target === "email-code") {
         // Show the email box.
-        $("steamer-email-code-div").show();
+        $("#steamer-email-code-div").show();
     }
 
 }

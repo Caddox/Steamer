@@ -12,7 +12,10 @@ class LocalSteamClient(SteamClient):
         self.set_credential_location('.')
         self.download_location = Path('./.downloads/')
         self.init_db()
-        self.db_login()
+        try:
+            self.db_login()
+        except:
+            pass
         #self.force_login()
         if self.logged_on:
             self.cdn = CDNClient(self)
@@ -43,6 +46,8 @@ class LocalSteamClient(SteamClient):
             )
         """)
 
+        self.db_conn.execute("create table if not exists users (user text, pass text)")
+
         self.db_conn.commit()
 
     def force_login(self):
@@ -60,10 +65,10 @@ class LocalSteamClient(SteamClient):
 
     def add_login_to_db(self, username, password):
         # Create the user table
-        self.db_conn.execute("create table if not exits users (user text, pass text)")
+        self.db_conn.execute("create table if not exists users (user text, pass text)")
 
         # Check the table for the user
-        if len(self.db_conn.execute("select user from users where user=?", (username,)).fetchone()) != 0:
+        if self.db_conn.execute("select user from users where user=?", (username,)).fetchone() is not None:
             # Run the db_login?
             self.db_login
             if self.logged_on is False:
