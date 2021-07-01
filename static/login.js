@@ -7,27 +7,37 @@ $(document).ready(function() {
 
     // On the login click
     $('#steamer-user-pass-submit').click(function() {
-        // Send an ajax POST to "/login":
-        var payload = {
-            "username":   $('#steamer-username').val(),
-            "password":   $('#steamer-password').val(),
-            "2fa":        $('#steamer-2fa').val(),
-            "email-code": $('#steamer-email-code').val()
-        };
-
-        console.log(payload);
-        $.ajax({
-            url: window.location.origin + "/api/v1/login",
-
-            data: JSON.stringify(payload),
-            contentType: "application/json",
-            type: "POST",
-
-            success: function(data) {
-                login_result_handler(data);
-            },
-        });
+        login_request();
     });
+});
+
+function login_request() {
+// Send an ajax POST to "/login":
+    var payload = {
+        "username":   $('#steamer-username').val(),
+        "password":   $('#steamer-password').val(),
+        "2fa":        $('#steamer-2fa').val(),
+        "email-code": $('#steamer-email-code').val()
+    };
+
+    console.log(payload);
+    $.ajax({
+        url: window.location.origin + "/api/v1/login",
+
+        data: JSON.stringify(payload),
+        contentType: "application/json",
+        type: "POST",
+
+        success: function(data) {
+            login_result_handler(data);
+        },
+    });
+}
+
+$(document).on("keydown", "#login-div", function(e) {
+    if(e.keyCode == 13) {
+        login_request();
+    }
 });
 
 function login_result_handler(data) {
@@ -40,7 +50,7 @@ function login_result_handler(data) {
         data.reason: string => String stating the reason for the target failure.
     */
     if(data.success == true) {
-        alert("Login successfull!");
+        //alert("Login successfull!");
         location.href = location.origin;
         return;
     }
