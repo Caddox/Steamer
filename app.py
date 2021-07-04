@@ -6,6 +6,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from steam.enums import EResult
 from client import LocalSteamClient
 from db import init_app, get_db
+from pathlib import Path
 
 from timelimits import TimeRange
 
@@ -122,9 +123,17 @@ def api_get_settings():
     # Return JSON data containing the settings that can be updated.
     payload = {
         "download_location": str(steam.download_location.resolve()),
-
     }
     return payload
+
+@app.route("/api/v1/settings/set", methods=["POST"])
+def api_update_settings():
+    j = request.get_json()
+
+    steam.download_location = Path(j['download_location'])
+    print(steam.download_location)
+
+    return {'response': 'Settings updated.'}
 
 @app.route("/api/v1/query_downloads")
 def api_query_downloads():

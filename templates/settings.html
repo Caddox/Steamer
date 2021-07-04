@@ -3,16 +3,22 @@
     <head>
         <title>Steamer is Warming up. . .</title>
         <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='base.css') }}">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+        <script type="text/javascript" src="{{ url_for('static', filename='settings.js') }} "></script>
     </head>
 
     <body>
-        <p> Hello world! </p>
-        <form>
-            <label for='download_path'>Download Path:</label>
-            <input type='text' name='download_path' />
-            <label for='target_os'>Target OS:</label>
-            <input type='text' name='target_os' />
-        </form>
+        <div class="header">
+            <a href='/'>Steamer</a> 
+            <div class='header-right'>
+                <a href="/settings">Settings</a>
+            </div>
+        </div>
+        <label for='download_path'>Download Path:</label>
+        <input id='steamer-settings-dl-path' type='text' name='download_path' value="hello!"/>
+        <button id='steamer-settings-submit-button'>Update Settings</button>
+        
+        <div id="steamer-message-log"></div>
     </body>
 
 </html>
