@@ -4,6 +4,8 @@ import sqlite3
 from pathlib import Path
 from dl_handler import manifest_process_factory
 from multiprocessing import Process, Pipe
+from gevent import spawn
+from gevent.socket import wait_write, wait_read
 
 class LocalSteamClient(SteamClient):
     def __init__(self, *args, **kwargs):
@@ -172,23 +174,27 @@ class LocalSteamClient(SteamClient):
         if self.cdn is None:
             self.cdn = CDNClient(self)
 
-        proc = Process(target=manifest_process_factory, args=(proc_conn, self.cdn, download_path,), kwargs={'timerange': time_range}, daemon=True)
+        #proc = Process(target=manifest_process_factory, args=(proc_conn, self.cdn, download_path,), kwargs={'timerange': time_range}, daemon=True)
+        proc = spawn(manifest_process_factory, proc_conn, self.cdn, download_path, timerange=time_range)
         proc.start()
         local_conn.send(["download", app_id])
         
         #add the process and some info to the process list
-        self.process_list.append((local_conn, proc, time_range))
+        self.process_list.append((local_conn, app_id, time_range))
 
         # Return the PID to search by for later
-        return proc.pid
+        print(dir(proc))
+        return proc
 
     def check_download_state_all(self):
         state = []
         for item in self.process_list:
-            item[0].send("query").recv()
+            wait_write(item[0].fileno())
+            item[0].send("query")
+            wait_read(item[0].fileno())
             running = item[0].recv()
 
-            state.append(item[1].pid, running)
+            state.append((item[1], running))
 
         return state
 

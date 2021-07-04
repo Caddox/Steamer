@@ -1,7 +1,10 @@
 from steam.core.crypto import sha1_hash
 from pathlib import Path
-from time import sleep
+#from time import sleep
 from timelimits import TimeRange
+
+from gevent.socket import wait_read, wait_write
+from gevent import sleep
 
 class ManifestProcess():
     def __init__(self, pipe, cdn, download_path, timerange=TimeRange(0, 0, 0, 0)):
@@ -29,6 +32,7 @@ class ManifestProcess():
     def pump_messages(self):
         # Poll the pipe for new info
         while self.pipe.poll():
+            wait_read(self.pipe.fileno())
             msg = self.pipe.recv()
             print(msg)
 
@@ -41,6 +45,7 @@ class ManifestProcess():
                 self.download_app(msg[1])
 
             elif msg == 'query':
+                wait_write(self.pipe.fileno())
                 self.pipe.send(self.downloading)
 
         # if entering the window

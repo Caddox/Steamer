@@ -1,5 +1,4 @@
 # To prevent gevent errors between Flask and steam.client
-from threading import Timer
 from gevent import monkey
 monkey.patch_all()
 
@@ -117,3 +116,19 @@ def update_app():
     # Try to run the populate app thingy for steam
     steam.populate_apps()
     return { "done": True }
+
+@app.route("/api/v1/settings")
+def api_get_settings():
+    # Return JSON data containing the settings that can be updated.
+    payload = {
+        "download_location": str(steam.download_location.resolve()),
+
+    }
+    return payload
+
+@app.route("/api/v1/query_downloads")
+def api_query_downloads():
+    s = steam.check_download_state_all()
+    print(s)
+
+    return {'data': s}
