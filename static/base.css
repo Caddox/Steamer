@@ -44,3 +44,28 @@ input[type=text], input[type=password] {
     position: relative;
 }
 
+.header {
+    overflow: hidden;
+    background-color: #21314549;
+    padding: 10px 10px;
+}
+
+.header a {
+    float: left;
+    color: lightgrey;
+    text-align: center;
+    padding: 12px;
+    text-decoration: none;
+    font-size: 18px;
+    line-height: 25px;
+    border-radius: 4px;
+}
+
+.header-right {
+    float:right;
+}
+
+.header a:hover {
+    background-color: #ddd;
+    color: black;
+}
