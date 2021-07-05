@@ -43,7 +43,7 @@ def main_page():
 
 @app.route("/settings")
 def settings_page():
-    return render_template("settings.html")
+    return render_template("settings.html", settings=steam.get_settings_as_json())
 
 @app.route("/login")
 def login_dummy():
@@ -130,8 +130,7 @@ def api_get_settings():
 def api_update_settings():
     j = request.get_json()
 
-    steam.download_location = Path(j['download_location'])
-    print(steam.download_location)
+    steam.update_settings("settings.json", j)
 
     return {'response': 'Settings updated.'}
 

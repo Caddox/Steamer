@@ -14,8 +14,38 @@
                 <a href="/settings">Settings</a>
             </div>
         </div>
+
         <label for='download_path'>Download Path:</label>
-        <input id='steamer-settings-dl-path' type='text' name='download_path' value="hello!"/>
+        <input id='steamer-settings-dl-path' type='text' name='download_path' value="{{ settings['download_location'] }}"/>
+        
+        <div id='steamer-settings-os-filters' class='editable-list'>
+            <label>OS Filter List</label>
+            <ul>
+                {% for os in settings['os_list'] %}
+                <li>{{os}}<span class='remove'>x</span></li>
+                {% endfor %}
+            </ul>
+
+            <label for='new_os_list'>Add new OS Filter</label>
+            <input id='steamer-settings-input-os' type="text" name='new_os_list' placeholder='Add new OS filter' />
+            <button id='steamer-settings-add-os'>Add OS Filter</button>
+        </div>
+
+        <br/>
+        <div id='steamer-settings-language-filters' class='editable-list'>
+            <label>Languge Filter List</label>
+            <ul>
+                {% for language in settings['languages'] %}
+                <li>{{language}}<span class='remove'>x</span></li>
+                {% endfor %}
+            </ul>
+
+            <label for='new_language'>Add new language filter</label>
+            <input id='steamer-settings-input-language' type="text" name='new_os_list' placeholder='Add new language filter' />
+            <button id='steamer-settings-add-language'>Add Language Filter</button>
+        </div>
+
+        <br />
         <button id='steamer-settings-submit-button'>Update Settings</button>
         
         <div id="steamer-message-log"></div>

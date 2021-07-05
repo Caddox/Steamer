@@ -4,6 +4,7 @@ import sqlite3
 from pathlib import Path
 from dl_handler import manifest_process_factory
 from multiprocessing import Process, Pipe
+import json
 from gevent import spawn
 from gevent.socket import wait_write, wait_read
 
@@ -12,7 +13,12 @@ class LocalSteamClient(SteamClient):
         self.db_conn = None
         SteamClient.__init__(self, *args, **kwargs)
         self.set_credential_location('.')
-        self.download_location = Path('./.downloads/')
+
+        self.download_location: Path = Path('.')
+        self.os_list = []
+        self.languages = []
+        self.load_settings_from_file("settings.json")
+
         self.init_db()
         try:
             self.db_login()
@@ -80,6 +86,52 @@ class LocalSteamClient(SteamClient):
         self.db_conn.execute("insert or ignore into users VALUES (?, ?)", (username, password,))
 
         self.db_conn.commit()
+
+    def load_settings_from_file(self, filepath):
+        p = Path(filepath)
+
+        if not p.exists():
+            payload = {
+                'download_location': str(Path('./.downloads').resolve()),
+                'os_list': ['windows'],
+                'languages': ['english'],
+            }
+
+            with open(p, 'w') as f:
+                f.write(json.dumps(payload))
+
+        # p is a json file.
+        with open(p, 'r') as f:
+            data = json.loads(f.read())
+
+            self.download_location = Path(data['download_location'])
+            self.os_list = data['os_list']
+            self.languages = data['languages']
+
+    def update_settings(self, settings_filepath, data):
+        settings_file = Path(settings_filepath)
+        current_settings = {}
+        with open(settings_file, 'r') as f:
+            current_settings = json.loads(f.read())
+
+        current_settings.update(data)
+
+        # Write the new settings
+        with open(settings_file, 'w') as f:
+            f.write(json.dumps(current_settings))
+
+        # Re-read the settings back into the object
+        self.load_settings_from_file(settings_filepath)
+
+    def get_settings_as_json(self):
+        out = {
+            'download_location': str(self.download_location.resolve()),
+            'os_list': self.os_list,
+            'languages': self.languages,
+        }
+
+        return out
+
 
     def populate_apps(self):
         # Ensure the client is logged in

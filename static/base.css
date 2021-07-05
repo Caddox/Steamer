@@ -69,3 +69,28 @@ input[type=text], input[type=password] {
     background-color: #ddd;
     color: black;
 }
+
+.remove {
+    float: right;
+    cursor: pointer;
+    position:absolute;
+    right: 0%;
+    padding: 12px 16px;
+    transform: translate(0%, -50%);
+}
+
+.remove span:hover {
+    background-color: #bbb;
+}
+
+.editable-list ul li { 
+    border: 1px solid black;
+    margin-top: -1px;
+    background-color: #21314549;
+    padding: 12px;
+    text-decoration: none;
+    font-size: 14px;
+    color: lightgrey;
+    display: block;
+    position: relative;
+}
