@@ -7,7 +7,13 @@ from gevent.socket import wait_read, wait_write
 from gevent import sleep
 
 class ManifestProcess():
+    '''
+    Class used for wrapping the steam manifest download process.
+    '''
     def __init__(self, pipe, cdn, download_path, timerange=TimeRange(0, 0, 0, 0)):
+        '''
+        Constructor method. Sets up the class object
+        '''
         self.pipe = pipe
         self.cdn = cdn
         self.download_path = download_path
@@ -16,7 +22,10 @@ class ManifestProcess():
         self.time_range = timerange
         self.target_app = None
 
-    def download_app(self, app_id):
+    def download_app(self, app_id: int):
+        '''
+        Class method. Attempts to download an app given an app id. Encapsulates the logic behind manifests.
+        '''
         print("Working on app: {}".format(app_id))
         if self.time_range.inside_window():
             self.downloading = True
@@ -30,6 +39,16 @@ class ManifestProcess():
                 self.handle_manifest(man)
 
     def pump_messages(self):
+        '''
+        Class method. Because the download process exists within a gevent Greenlit, we can poll it with Pipes.
+
+        Commands: 
+            'stop' -> Stop the process from downloading.
+            'start' -> Start the process downloading.
+            'download' -> Tuple message; msg[1] is the app id to download.
+
+        Note: WHile pumping messages, the system will begin downloading if it gets within the time window.
+        '''
         # Poll the pipe for new info
         while self.pipe.poll():
             wait_read(self.pipe.fileno())
@@ -60,6 +79,9 @@ class ManifestProcess():
 
 
     def handle_manifest(self, manifest):
+        '''
+        Class method. Given a manifest, downloading the files from the steam sever.
+        '''
         base_path = Path(self.download_path)
 
         # Grab the file iterator
@@ -120,6 +142,11 @@ class ManifestProcess():
 
 
 def manifest_process_factory(*args, **kwargs):
+    '''
+    Wrapper function used to create a new process. *args and **kwargs are passed directly into
+    the ManifestProcess constructor. It will then sleep and pump the messages for the process until
+    something occurs it needs to handle.
+    '''
     p = ManifestProcess(*args, **kwargs)
 
     while p.alive:

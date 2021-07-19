@@ -2,6 +2,9 @@ import sqlite3
 from flask import g
 
 def get_db():
+    '''
+    Function used by Flask to acquire the sqlite database
+    '''
     if 'db' not in g:
         g.db = sqlite3.connect(
             "steamer.db",
@@ -12,10 +15,16 @@ def get_db():
     return g.db
 
 def close_db(e=None):
+    '''
+    Funciton used by Flask to remove the database context.
+    '''
     db = g.pop('db', None)
 
     if db is not None:
         db.close()
 
 def init_app(app):
+    '''
+    Function used by Flask to setup the database teardown
+    '''
     app.teardown_appcontext(close_db)

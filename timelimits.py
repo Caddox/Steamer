@@ -1,29 +1,43 @@
-from re import I
 from time import localtime, sleep, asctime
-import subprocess as sub
 
 class TimeRange():
-    def __init__(self, s_hour, s_min, e_hour, e_min):
+    '''
+    Class: TimeRange
+    Purpose: Given a start time and an endtime, find if the system time is within the window.
+    '''
+    def __init__(self, s_hour: int , s_min: int, e_hour: int, e_min: int):
+        '''
+        Class constructor.
+        '''
         self.start_hour = s_hour
         self.end_hour = e_hour
         self.start_min = s_min
         self.end_min = e_min 
 
         self.running = False 
-        self.passes_day = self.check_if_passes_day()
+        self.passes_day = self._check_if_passes_day()
 
-    def inside_window(self):
+    def inside_window(self) -> bool:
+        '''
+        Class method. Report if the current time falls within the given window.
+        '''
         if self.running:
-            return not self.has_stopped()
+            return not self._has_stopped()
 
-        return self.has_started()
+        return self._has_started()
         
-    def check_if_passes_day(self):
+    def _check_if_passes_day(self) -> bool:
+        '''
+        Class method (Private). Returns true if the window's duration will go past midnight into a new day
+        '''
         if self.start_hour > self.end_hour:
             return True
         return False
     
-    def has_started(self):
+    def _has_started(self) -> bool:
+        '''
+        Class method (Private). Returns True if the current time has entered the window.
+        '''
         tn = localtime()
 
         if tn.tm_hour >= self.start_hour and \
@@ -33,7 +47,10 @@ class TimeRange():
         
         return False
 
-    def has_stopped(self):
+    def _has_stopped(self) -> bool:
+        '''
+        Class method (private): Returns True if the current time is outside of the window
+        '''
         tn = localtime()
 
         if self.passes_day and tn.tm_hour + 23 < self.start_hour + self.end_hour:
@@ -45,45 +62,3 @@ class TimeRange():
             return True
 
         return False
-
-
-class Sentinal():
-    def __init__(self):
-        self.funcs = {}
-        self.times = {}
-        self.processess = {}
-
-    def update_state(self):
-        for i in self.funcs.keys():
-            if self.times[i].inside_window() and i not in self.processess.keys():
-                print("[{}] Starting process: {}".format(asctime(), self.funcs[i]))
-                s = sub.Popen(self.funcs[i], stdout=sub.PIPE)
-                self.processess[i] = s
-
-            if not self.times[i].inside_window() and i in self.processess.keys():
-                print("[{}] Terminating process: {}".format(asctime(), self.funcs[i]))
-                self.processess[i].terminate()
-                del self.processess[i]
-
-    def run_forever(self):
-        # Loop over update_state every five seconds forever.
-        while 1:
-            try:
-                sleep(60)
-                self.update_state()
-            except KeyboardInterrupt:
-                print("Shutting Sentinal down. . .")
-                self.clear()
-                return
-
-    def clear(self):
-        for i in self.processess.keys():
-            self.processess[i].terminate()
-
-    def tell_running(self):
-        for i in self.processess.keys():
-            print("`{}` is running".format(self.funcs[i]))
-
-    def delay_subprocess(self, id, time_range, args):
-        self.times[id] = time_range
-        self.funcs[id] = args
