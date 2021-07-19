@@ -32,6 +32,11 @@ def human_readable(bytes):
 
 @app.route("/")
 def main_page():
+    '''
+    App route for rendering `home.html`. Touches the database for app information and the username.
+
+    Redirects: Redirects to login page if the user is not logged in.
+    '''
     if not steam.logged_on:
         return redirect(url_for("login_dummy"))
         #return "Please run the setup.py file. Steam can't work without it!"
@@ -47,10 +52,21 @@ def settings_page():
 
 @app.route("/login")
 def login_dummy():
+    '''
+    App route for the login page. Renders `login.html`
+    '''
     return render_template("login.html")
 
 @app.route("/app/<app_id>")
 def app_page(app_id):
+    '''
+    App route for individual apps. Renders `app.html` after looking in the database for depots belonging to the app.
+    Filters app information based on DLC and ignoring Linux and Mac depots.
+
+    Inputs: app_id: Integer ID for a steam app.
+
+    Note: This function also preforms calls to `human_readable(bytes)` to calculate the space needed by each depot.
+    '''
     db = get_db()
 
     filter_vals = steam.os_list[:]
@@ -83,6 +99,13 @@ def app_page(app_id):
 
 @app.route("/app/<app_id>/download", methods=["POST"])
 def schedule_download(app_id):
+    '''
+    App route for downloading a game from an app ID. *POST ONLY*
+
+    Input:
+    - Integer app_id -> app being targeted for download
+    - JSON TimeRange -> time range app can be downloaeded during.
+    '''
     # Get the JSON request from the website
     j = request.get_json()
     tr = TimeRange(
@@ -99,7 +122,18 @@ def schedule_download(app_id):
 
 ##### Some API Methods #####
 @app.route("/api/v1/login", methods=["POST"])
-def try_login():
+def api_try_login():
+    '''
+    API route for attempting to login to a steam account.
+
+    **POST ONLY**
+
+    Input:
+    - JSON login_info -> Holds username, password, 2fa, and email code to try to login with.
+
+    Output:
+    - JSON result -> Returns bool:success, reason:str, and target:str to be parsed by the JavaScript
+    '''
     if steam.logged_on:
         return {"success" : True}
     # Get the JSON content from the website
@@ -130,12 +164,20 @@ def try_login():
 
 @app.route("/api/v1/populate")
 def update_app():
+    '''
+    API route for populating apps with the Steam interface.
+
+    Note: Often takes a long time to run.
+    '''
     # Try to run the populate app thingy for steam
     steam.populate_apps()
     return { "done": True }
 
 @app.route("/api/v1/settings")
 def api_get_settings():
+    '''
+    API route for getting settings for the user to look at.
+    '''
     # Return JSON data containing the settings that can be updated.
     payload = {
         "download_location": str(steam.download_location.resolve()),
@@ -144,6 +186,11 @@ def api_get_settings():
 
 @app.route("/api/v1/settings/set", methods=["POST"])
 def api_update_settings():
+    '''
+    API route for updating settings
+
+    **POST ONLY**
+    '''
     j = request.get_json()
 
     steam.update_settings("settings.json", j)
@@ -152,6 +199,12 @@ def api_update_settings():
 
 @app.route("/api/v1/query_downloads")
 def api_query_downloads():
+    '''
+    API route for finding what items are in the download queue.
+
+    Returns:
+    - JSON -> data contains the information
+    '''
     s = steam.check_download_state_all()
     print(s)
 

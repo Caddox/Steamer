@@ -7,11 +7,21 @@ from multiprocessing import Process, Pipe
 import json
 from gevent import spawn
 from gevent.socket import wait_write, wait_read
+from timelimits import TimeRange
 
 import time
 
 class LocalSteamClient(SteamClient):
+    '''
+    Class wrapping the steam client.
+    '''
     def __init__(self, *args, **kwargs):
+        '''
+        Constructor for the class. *args and **kwargs are passed into the 
+        constructor for the SteamClient class.
+
+        Initalizes class by setting credential location, attempting login, and setting up the database.
+        '''
         self.db_conn = None
         SteamClient.__init__(self, *args, **kwargs)
         self.set_credential_location('.')
@@ -29,12 +39,17 @@ class LocalSteamClient(SteamClient):
         #self.force_login()
         if self.logged_on:
             self.cdn = CDNClient(self)
-        else :
+        else:
             self.cdn = None
         self.process_list = []
 
 
     def init_db(self):
+        '''
+        Class method. Initilizes the database `steamer.db`
+
+        If the database already exists, nothing is done.
+        '''
         self.db_conn = sqlite3.connect("steamer.db")
 
         # Make tables if they don't exist
@@ -61,6 +76,11 @@ class LocalSteamClient(SteamClient):
         self.db_conn.commit()
 
     def force_login(self):
+        '''
+        Class method. A command line way to attempt to login. 
+
+        Basically useless because we don't use the command line to login anymore.
+        '''
         if self.logged_on:
             return
         if self.relogin_available:
@@ -69,11 +89,20 @@ class LocalSteamClient(SteamClient):
             self.cli_login()
 
     def db_login(self):
+        '''
+        Class method. Queries the database to see if there is a username and password saved.
+        If there is, it attempts to login with them.
+        '''
         user, password = self.db_conn.execute("select user, pass from users").fetchone()
         # Try to login
         self.login(user, password)
 
-    def add_login_to_db(self, username, password):
+    def add_login_to_db(self, username: str, password: str):
+        '''
+        Class method. Addes the table of users, then adds the username and password to the database.
+
+        Really not a good idea, being plaintext and all, but I can't find another option.
+        '''
         # Create the user table
         self.db_conn.execute("create table if not exists users (user text, pass text)")
 
@@ -136,7 +165,16 @@ class LocalSteamClient(SteamClient):
 
 
     def populate_apps(self):
+        '''
+        Class method. Using the Steam client functionallity, populate the database with:
+        - App info, including name, app id, and logo (url)
+        - Depot info, including name, app id, depot id, size (in bytes), and a boolean is_dlc marker.
+
+        Note: Often very slow. The SteamClient emulates a, well, Steam client, without actually being Steam itself.
+        It's just very slow, but is faster when the database is populated.
+        '''
         start = time.time()
+
         # Ensure the client is logged in
         if not self.logged_on and self.relogin_available:
             self.db_login()
@@ -221,7 +259,17 @@ class LocalSteamClient(SteamClient):
         end = time.time()
         print(f"Elapsed {end-start} seconds")
 
-    def download_app(self, app_id, time_range, download_path=None):
+    def download_app(self, app_id: int, time_range: TimeRange, download_path:Path=None):
+        '''
+        Class method. Wraps calls to the download handler, which itself is wrapped in a gevent spawn command.
+
+        Inputs:
+        - app_id: int -> The app id to download.
+        - time_range: TimeRange -> The time the app is able to be downloaded during.
+        - download_path: (Path | None) -> The path the download the content to.
+
+        Adds information on the greenlit to `self.process_list`
+        '''
         local_conn, proc_conn = Pipe()
         if download_path is None:
             download_path = self.download_location
@@ -245,6 +293,12 @@ class LocalSteamClient(SteamClient):
         return proc
 
     def check_download_state_all(self):
+        '''
+        Class method. Polls all processes it knows of, and queries their state. 
+
+        Returns: 
+        - List (app_id:int, running:str)
+        '''
         state = []
         for item in self.process_list:
             wait_write(item[0].fileno())
@@ -257,6 +311,11 @@ class LocalSteamClient(SteamClient):
         return state
 
     def get_apps(self):
+        '''
+        Class method. Used to select apps from the databse.
+
+        Outdated and unused due to Flask using gevent. It's just easier to access the database directy.
+        '''
         self.init_db()
         out = self.db_conn.execute("select * from apps where name not like '%Server%' and logo not like '' order by name ASC").fetchall()
 
@@ -266,7 +325,15 @@ class LocalSteamClient(SteamClient):
 
         return out
 
-    def get_depots_for(self, app_id):
+    def get_depots_for(self, app_id: int):
+        '''
+        Class method. Used to select the depots of a given app_id.
+
+        Inputs:
+        - app_id: int -> App id to target.
+
+        Outdated and unused due to Flask using gevent. It's just easier to access the database directy.
+        '''
         self.init_db()
         out = self.db_conn.execute("select * from depots where app_id=? and is_dlc=0", (app_id,)).fetchall()
 
