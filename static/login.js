@@ -67,5 +67,8 @@ function login_result_handler(data) {
         // Show the email box.
         $("#steamer-email-code-div").show();
     }
+    else {
+        alert(data.reason);
+    }
 
 }
