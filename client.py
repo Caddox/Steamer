@@ -8,6 +8,8 @@ import json
 from gevent import spawn
 from gevent.socket import wait_write, wait_read
 
+import time
+
 class LocalSteamClient(SteamClient):
     def __init__(self, *args, **kwargs):
         self.db_conn = None
@@ -78,7 +80,7 @@ class LocalSteamClient(SteamClient):
         # Check the table for the user
         if self.db_conn.execute("select user from users where user=?", (username,)).fetchone() is not None:
             # Run the db_login?
-            self.db_login
+            self.db_login()
             if self.logged_on is False:
                 print("Data was saved, but the logon failed?")
 
@@ -93,8 +95,8 @@ class LocalSteamClient(SteamClient):
         if not p.exists():
             payload = {
                 'download_location': str(Path('./.downloads').resolve()),
-                'os_list': ['windows'],
-                'languages': ['english'],
+                'os_list': [],
+                'languages': [],
             }
 
             with open(p, 'w') as f:
@@ -134,6 +136,7 @@ class LocalSteamClient(SteamClient):
 
 
     def populate_apps(self):
+        start = time.time()
         # Ensure the client is logged in
         if not self.logged_on and self.relogin_available:
             self.db_login()
@@ -214,6 +217,9 @@ class LocalSteamClient(SteamClient):
         self.db_conn.executemany("insert into apps VALUES(?, ?, ?)", app_list)
         self.db_conn.executemany("insert into depots VALUES(?, ?, ?, ?, ?)", depot_list)
         self.db_conn.commit()
+
+        end = time.time()
+        print(f"Elapsed {end-start} seconds")
 
     def download_app(self, app_id, time_range, download_path=None):
         local_conn, proc_conn = Pipe()
