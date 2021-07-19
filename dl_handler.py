@@ -1,10 +1,10 @@
 from steam.core.crypto import sha1_hash
 from pathlib import Path
-#from time import sleep
+from time import sleep
 from timelimits import TimeRange
 
 from gevent.socket import wait_read, wait_write
-from gevent import sleep
+#from gevent import sleep
 
 class ManifestProcess():
     def __init__(self, pipe, cdn, download_path, timerange=TimeRange(0, 0, 0, 0)):
@@ -15,17 +15,26 @@ class ManifestProcess():
         self.alive = True
         self.time_range = timerange
         self.target_app = None
+        self.filter_func = None
 
     def download_app(self, app_id):
         print("Working on app: {}".format(app_id))
         if self.time_range.inside_window():
             self.downloading = True
         else:
-            return
+            while not self.time_range.inside_window():
+                sleep(60)
 
         # Get the manifest from the cdn
-        manifests = self.cdn.get_manifests(app_id)
+        print(dir(self.cdn))
+        print(self.cdn.steam.logged_on)
+        try:
+            self.steam.db_login()
+        except:
+            pass
+        manifests = self.cdn.get_manifests(int(app_id), filter_func=self.filter_func)
         for man in manifests:
+            print(man.name)
             if self.downloading:
                 self.handle_manifest(man)
 
@@ -101,12 +110,15 @@ class ManifestProcess():
                     pass
 
                 # Verify the sha1 hash of the file
-                with open(fp, 'rb') as f:
-                    cur_data = f.read(chunk.cb_original)
-                    if sha1_hash(cur_data) == chunk.sha:
-                        # if the two are the same, we have the entire file!
-                        total_bytes += chunk.cb_original
-                        continue
+                try:
+                    with open(fp, 'rb') as f:
+                        cur_data = f.read(chunk.cb_original)
+                        if sha1_hash(cur_data) == chunk.sha:
+                            # if the two are the same, we have the entire file!
+                            total_bytes += chunk.cb_original
+                            continue
+                except FileNotFoundError:
+                    pass
 
                 # get the chunk data from the cdn
                 data = self.cdn.get_chunk(manifest.app_id, manifest.depot_id, chunk.sha.hex())
@@ -123,5 +135,5 @@ def manifest_process_factory(*args, **kwargs):
     p = ManifestProcess(*args, **kwargs)
 
     while p.alive:
-        sleep(10)
+        #sleep(10)
         p.pump_messages()
