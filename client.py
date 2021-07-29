@@ -283,8 +283,10 @@ class LocalSteamClient(SteamClient):
         if download_path is None:
             download_path = self.download_location
 
+        # Grab the game's name to put as the filepath like Steam does.
+        name = self.db_conn.execute("select name from apps where app_id=?", (app_id,)).fetchone()[0]
         download_path = Path(download_path)
-        download_path = download_path / str(app_id)
+        download_path = download_path / str(name)
         
         if self.cdn is None:
             self.cdn = CDNClient(self)
