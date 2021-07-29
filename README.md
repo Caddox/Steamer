@@ -1,5 +1,5 @@
 # Steamer #
-A Python based app used to download games from Steam on an independent server!
+Steamer is a Flask app that allows you to download games overnight on slow connections utilizing an external server rather than your main PC (though, you can still use your main PC with it).
 
 ## Why? ##
 This application exists for several reasons:
@@ -8,10 +8,10 @@ This application exists for several reasons:
 - The official headless steam client [SteamCMD](https://developer.valvesoftware.com/wiki/SteamCMD) is restricted to x86 and x86_64 machines; nothing exists for ARM devices (like a Raspberry Pi)
 - I wanted a project. Sue me.
 
-To encapsulate what this is: Steamer is a Flask app that allows you to download games overnight on slow connections utilizing an external server rather than your main PC.
-
 ## Installation ##
 ### Prerequisites ###
+`Python>=3.5`. I don't have an exact version required, so you may be able to get away with less. 
+
 The steam client emulator we are using requires [Gevent](https://www.gevent.org/install.html), so be sure you have whatever it requires. For the RPI4, it requires binaries for `make`, `gcc`, and probably `cc`. If you run into issues when you're installing pip packages, this is probably why.
 
 ### Process ###
@@ -38,7 +38,7 @@ python -m flask run --host=0.0.0.0
 With another computer on your local network, you can then access it by visiting the IP in your browser at port *5000*
 ```bash
 # If you ran with --host=0.0.0.0
-192.168.0.254:5000 # Your IP will be different; check the log file for what it will be for you.
+xxx.xxx.xxx.xxx:5000 # Your IP will be different; check the log file for what it will be for you.
 
 # Otherwise
 localhost:5000
@@ -62,7 +62,7 @@ Be sure to setup the download path to wherever you want -- like an external hard
 
 *Q*: You seem to have a pretty specific use case; why should I do it your way?
 
-*A*: You don't have to; this is just another option available to you. There are many different tools built for Steam, such as Bot Traders, local Steam Caching servers, and even tools to idle in games for Steam Trading Cards.
+*A*: You don't have to; this is just another option available to you. There are many different tools built for Steam, such as Bot Traders, local Steam Caching servers, and even tools to idle in games for Steam Trading Cards. The closest thing to this is probably [steamctl](https://github.com/ValvePython/steamctl), which is another option if you like using the command line for everything. (Fun fact: Steamer started life as a wrapper for steamctl!)
 
 #
 
@@ -78,7 +78,7 @@ Be sure to setup the download path to wherever you want -- like an external hard
 
 #
 
-*Q*: I copied the files like you said, but Steam still wants to download something? What did I do wrong?
+*Q*: I copied the files like you said, but Steam still wants to download something. What did I do wrong?
 
 *A*: Probably nothing. There are some files Steam will sometimes re-download when verifying the files (mostly *.exe files). Luckily, the assets of the game are often much larger than the *.exe itself. In rare cases, you may have added a filter that removed an important depot.
 
