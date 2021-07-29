@@ -47,8 +47,7 @@ class ManifestProcess():
             logger.info("Process is inside window, continuing")
         else:
             logger.warn("Process manager is outside of time window")
-            while not self.time_range.inside_window():
-                sleep(60)
+            return
 
         # Get the manifest from the cdn
         print(self.cdn.steam.logged_on)
