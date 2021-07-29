@@ -12,7 +12,7 @@ def human_readable(bytes):
 
     return f"{bytes:.2f} {unit}"
 
-def check_file_path_existance(path: [Path | str]):
+def check_file_path_existence(path):
     '''
     Checks if a given path exists. 
     Path can be a string or a pathlib.Path object. 
