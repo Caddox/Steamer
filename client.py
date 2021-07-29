@@ -119,6 +119,9 @@ class LocalSteamClient(SteamClient):
         self.db_conn.commit()
 
     def load_settings_from_file(self, filepath):
+        '''
+        Class method. Loads the settings the user has defined into the Steam client object.
+        '''
         p = Path(filepath)
 
         if not p.exists():
@@ -140,6 +143,9 @@ class LocalSteamClient(SteamClient):
             self.languages = data['languages']
 
     def update_settings(self, settings_filepath, data):
+        '''
+        Class method. Update the settings in both the object and the given filepath.
+        '''
         settings_file = Path(settings_filepath)
         current_settings = {}
         with open(settings_file, 'r') as f:
@@ -155,6 +161,9 @@ class LocalSteamClient(SteamClient):
         self.load_settings_from_file(settings_filepath)
 
     def get_settings_as_json(self):
+        '''
+        Class method. Returns the settings in the file as a dictionary
+        '''
         out = {
             'download_location': str(self.download_location.resolve()),
             'os_list': self.os_list,

@@ -37,6 +37,9 @@ def main_page():
 
 @app.route("/settings")
 def settings_page():
+    '''
+    App route for displaying the settings page.
+    '''
     return render_template("settings.html", settings=steam.get_settings_as_json())
 
 @app.route("/login")
