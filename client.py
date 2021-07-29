@@ -289,7 +289,6 @@ class LocalSteamClient(SteamClient):
         self.process_list.append((local_conn, app_id, time_range))
 
         # Return the PID to search by for later
-        print(dir(proc))
         return proc
 
     def check_download_state_all(self):
@@ -341,5 +340,3 @@ class LocalSteamClient(SteamClient):
 
 if __name__ == "__main__":
     client = LocalSteamClient()
-    #client.populate_apps()
-    #client.download_app(579180, './_579180')
