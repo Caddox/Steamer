@@ -1,10 +1,22 @@
-from steam.core.crypto import sha1_hash
 from pathlib import Path
-from time import sleep
+import re
+
+from steam.core.crypto import sha1_hash
 from timelimits import TimeRange
+from utils import human_readable
 
 from gevent.socket import wait_read, wait_write
-#from gevent import sleep
+from gevent import sleep
+
+import logging
+logging.basicConfig(
+    format='[%(asctime)s] === %(levelname)s === %(message)s',
+    datefmt='%m/%d/%Y - %I:%M:%S',
+    filename='log.txt',
+    encoding='utf-8',
+    level=logging.INFO
+)
+logger = logging
 
 class ManifestProcess():
     '''
@@ -22,47 +34,74 @@ class ManifestProcess():
         self.time_range = timerange
         self.target_app = None
         self.filter_func = None
+        logger.info("Manifest Process object created")
 
     def download_app(self, app_id: int):
         '''
         Class method. Attempts to download an app given an app id. Encapsulates the logic behind manifests.
         '''
         print("Working on app: {}".format(app_id))
+        logger.info("Working on app: %s", app_id)
         if self.time_range.inside_window():
             self.downloading = True
+            logger.info("Process is inside window, continuing")
         else:
+            logger.warn("Process manager is outside of time window")
             while not self.time_range.inside_window():
                 sleep(60)
 
         # Get the manifest from the cdn
-        print(dir(self.cdn))
         print(self.cdn.steam.logged_on)
-        try:
-            self.steam.db_login()
-        except:
-            pass
+        if not self.cdn.steam.logged_on:
+            try:
+                self.steam.db_login()
+            except:
+                pass
+
+        # Add a definition for the filter func
+        if self.filter_func is None:
+            def filter(depot_id, depot_info):
+                filters_json = self.cdn.steam.get_settings_as_json()
+
+                for filter in filters_json['languages']:
+                    if re.search(filter, depot_info['name'], re.IGNORECASE):
+                        logger.info("Filter func: Removed %s", depot_info)
+                        return False
+
+                for filter in filters_json['os_list']:
+                    if re.search(filter, depot_info['name'], re.IGNORECASE):
+                        logger.info("Filter func: Removed %s", depot_info)
+                        return False
+                    
+                return True
+
+            self.filter_func = filter
+
         manifests = self.cdn.get_manifests(int(app_id), filter_func=self.filter_func)
+        logger.info("[%s]: Manifests: %s", self.target_app, manifests)
+
         for man in manifests:
+            logger.info("[%s] Working on depot %s", self.target_app, man.name)
             print(man.name)
             if self.downloading:
                 self.handle_manifest(man)
 
     def pump_messages(self):
         '''
-        Class method. Because the download process exists within a gevent Greenlit, we can poll it with Pipes.
+        Class method. Because the download process exists within a gevent Greenlet, we can poll it with Pipes.
 
         Commands: 
-            'stop' -> Stop the process from downloading.
-            'start' -> Start the process downloading.
-            'download' -> Tuple message; msg[1] is the app id to download.
+            - 'stop' -> Stop the process from downloading.
+            - 'start' -> Start the process downloading.
+            - 'download' -> Tuple message; msg[1] is the app id to download.
 
-        Note: WHile pumping messages, the system will begin downloading if it gets within the time window.
+        Note: While pumping messages, the system will begin downloading if it gets within the time window.
         '''
         # Poll the pipe for new info
         while self.pipe.poll():
             wait_read(self.pipe.fileno())
             msg = self.pipe.recv()
-            print(msg)
+            logger.info("[%s]: Received message: `%s`", self.target_app, msg)
 
             if msg == "stop":
                 self.downloading = False
@@ -99,6 +138,8 @@ class ManifestProcess():
         total_bytes = 0
 
         for file in file_list_iterator:
+            logger.debug("[%s] Getting file %s", self.target_app, file)
+
             # Check if there are any messages in the pipe
             self.pump_messages()
 
@@ -110,44 +151,47 @@ class ManifestProcess():
             fp = base_path / file.filename
 
             # Check if the file exists 
-            offset = 0
             if not fp.exists():
                 # Create the file if it does not
-                #fp.mkdir(parents=True, exist_ok=True)
                 Path(fp.parents[0]).mkdir(parents=True, exist_ok=True)
 
-            # Read the file to the filepath 
             # Read the chunks from the file and iterate over them.
             for chunk in file.chunks:
-                # Before we get the chunk, check if the size of the file is 
-                # the same as the chunk.cb_original. If it is, skip the file download.
-                try:
-                    if fp.stat().st_size == chunk.cb_original:
-                        # Skip the chunk
-                        #print("Skipping chunk (already downloaded)")
-                        total_bytes += chunk.cb_original
-                        continue
-                except FileNotFoundError:
-                    # The file does not exist, so it must not be downloaded
-                    pass
+                # Pump messages after each chunk to improve responsiveness when downloading large files
+                self.pump_messages()
 
                 # Verify the sha1 hash of the file
                 try:
                     with open(fp, 'rb') as f:
-                        cur_data = f.read(chunk.cb_original)
-                        if sha1_hash(cur_data) == chunk.sha:
-                            # if the two are the same, we have the entire file!
-                            total_bytes += chunk.cb_original
-                            continue
+                        # Ensure we are seeking over actual data, as in the offset does not exceed the filesize
+                        # because that's undefined behavior in python! For some reason.
+                        max_offset = len(f.read())
+                        f.seek(0)
+
+                        if chunk.offset < max_offset:
+                            f.seek(chunk.offset)
+                            cur_data = f.read(chunk.cb_original)
+                            if sha1_hash(cur_data) == chunk.sha:
+                                # if the two are the same, we have the entire chunk!
+                                total_bytes += chunk.cb_original
+                                logger.debug("[%s] Chunk `%s` has the same hash as disk, skipping. . .", self.target_app, chunk.sha.hex())
+                                continue
                 except FileNotFoundError:
                     pass
 
                 # get the chunk data from the cdn
                 data = self.cdn.get_chunk(manifest.app_id, manifest.depot_id, chunk.sha.hex())
-                #print("Got data for chunk {}".format(chunk))
+                logger.info(
+                    "[%s] Got data for chunk `%s` from server (%s of %s bytes)",
+                    self.target_app,
+                    chunk.sha.hex(),
+                    human_readable(total_bytes),
+                    human_readable(file.size)
+                )
 
                 #Write the data to the file
-                with open(fp, 'wb') as f:
+                with open(fp, 'a+b') as f:
+                    f.seek(chunk.offset)
                     f.write(data)
 
                 total_bytes += chunk.cb_original
@@ -162,5 +206,5 @@ def manifest_process_factory(*args, **kwargs):
     p = ManifestProcess(*args, **kwargs)
 
     while p.alive:
-        #sleep(10)
+        sleep(10)
         p.pump_messages()
