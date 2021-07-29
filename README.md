@@ -74,15 +74,11 @@ Be sure to setup the download path to wherever you want -- like an external hard
 
 *Q*: How do I get Steam itself to recognize the game files?
 
-#
-
 *A*: First, exit Steam. Copy the game files from the server into wherever your `SteamApps/common` folder is. Then, start Steam and attempt to download the game. Steam should notice you have existing files for the game, and will verify them. If you've done everything correct, Steam will verify the files and then notify you that it's done downloading without downloading anything at all.
 
 #
 
 *Q*: I copied the files like you said, but Steam still wants to download something? What did I do wrong?
-
-#
 
 *A*: Probably nothing. There are some files Steam will sometimes re-download when verifying the files (mostly *.exe files). Luckily, the assets of the game are often much larger than the *.exe itself. In rare cases, you may have added a filter that removed an important depot.
 
