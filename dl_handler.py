@@ -164,7 +164,7 @@ class ManifestProcess():
                     with open(fp, 'rb') as f:
                         # Ensure we are seeking over actual data, as in the offset does not exceed the filesize
                         # because that's undefined behavior in python! For some reason.
-                        max_offset = len(f.read())
+                        max_offset = f.seek(0, 2) # Read the 0th byte from the end of the file
                         f.seek(0)
 
                         if chunk.offset < max_offset:
