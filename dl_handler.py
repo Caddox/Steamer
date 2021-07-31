@@ -121,7 +121,7 @@ class ManifestProcess():
             self.download_app(self.target_app)
 
         # If leaving the windoe
-        if not self.time_range.inside_window() and self.downloading:
+        if not self.time_range.inside_window():
             self.downloading = False
 
 
@@ -144,6 +144,7 @@ class ManifestProcess():
 
             # Check for the stop condition
             if not self.downloading:
+                logger.info("[%s] (File) Downloading was halted.", self.target_app)
                 return
 
             # Build the file path
@@ -158,6 +159,10 @@ class ManifestProcess():
             for chunk in file.chunks:
                 # Pump messages after each chunk to improve responsiveness when downloading large files
                 self.pump_messages()
+
+                if not self.downloading:
+                    logger.info("[%s] (Chunk) Downloading was halted.", self.target_app)
+                    return
 
                 # Verify the sha1 hash of the file
                 try:
