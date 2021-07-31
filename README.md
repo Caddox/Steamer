@@ -5,7 +5,7 @@ Steamer is a Flask app that allows you to download games overnight on slow conne
 This application exists for several reasons:
 
 - I wanted a way to download games at night that did not require my PC being on, and I had a Raspberry Pi kicking around
-- The official headless steam client [SteamCMD](https://developer.valvesoftware.com/wiki/SteamCMD) is restricted to x86 and x86_64 machines; nothing exists for ARM devices (like a Raspberry Pi)
+- The official headless steam client [SteamCMD](https://developer.valvesoftware.com/wiki/SteamCMD) is restricted to x86 and x86_64 machines; nothing official exists for ARM devices (like a Raspberry Pi)
 - I wanted a project. Sue me.
 
 ## Installation ##
@@ -66,7 +66,7 @@ Be sure to setup the download path to wherever you want -- like an external hard
 
 #
 
-*Q*: I've finished downloading a game, but its on my server, not my computer! I can't game with it there!
+*Q*: I've finished downloading a game, but it's on my server, not my computer! I can't game with it there!
 
 *A*: Yep, you've gotta move the game files to a Steam install directory for them to work. You can copy files over the network with something like [WinSCP](https://winscp.net/); or, if you downloaded the games to an external hard drive, walk the ten steps to the next room and bring the hard drive back, then copy the files.
 
@@ -80,7 +80,7 @@ Be sure to setup the download path to wherever you want -- like an external hard
 
 *Q*: I copied the files like you said, but Steam still wants to download something. What did I do wrong?
 
-*A*: Probably nothing. There are some files Steam will sometimes re-download when verifying the files (mostly *.exe files). Luckily, the assets of the game are often much larger than the *.exe itself. In rare cases, you may have added a filter that removed an important depot.
+*A*: Probably nothing. There are some files Steam will sometimes re-download when verifying the files (mostly *.exe files). Luckily, the assets of the game are often much larger than the *.exe itself. Additionally, the game may have updated since you downloaded it with Steamer, requiring Steam itself to update the game. In rare cases, you may have added a filter that removed an important depot.
 
 #
 
