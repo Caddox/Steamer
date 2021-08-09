@@ -185,7 +185,7 @@ class ManifestProcess():
 
                 # get the chunk data from the cdn
                 data = self.cdn.get_chunk(manifest.app_id, manifest.depot_id, chunk.sha.hex())
-                logger.info(
+                logger.debug(
                     "[%s] Got data for chunk `%s` from server (%s of %s bytes)",
                     self.target_app,
                     chunk.sha.hex(),
