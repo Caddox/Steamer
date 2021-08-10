@@ -30,5 +30,7 @@ def init_app(app):
     app.teardown_appcontext(close_db)
 
 def query_builder(head, rep, num_items, end=''):
-    # Make a query string with a given head, repeating part, and the number of items that will be inserted
+    '''
+    Make a query string with a given head, repeating part, and the number of items that will be inserted
+    '''
     return head + rep * num_items + end
