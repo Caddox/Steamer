@@ -1,5 +1,4 @@
 from pathlib import Path
-import re
 
 from steam.core.crypto import sha1_hash
 from timelimits import TimeRange
@@ -22,7 +21,7 @@ class ManifestProcess():
     '''
     Class used for wrapping the steam manifest download process.
     '''
-    def __init__(self, pipe, cdn, download_path, timerange=TimeRange(0, 0, 0, 0)):
+    def __init__(self, pipe, cdn, download_path, timerange=TimeRange(0, 0, 0, 0), depot_whitelist=None):
         '''
         Constructor method. Sets up the class object
         '''
@@ -34,6 +33,7 @@ class ManifestProcess():
         self.time_range = timerange
         self.target_app = None
         self.filter_func = None
+        self.depot_id_whitelist = depot_whitelist
         logger.info("Manifest Process object created")
 
     def download_app(self, app_id: int):
@@ -60,19 +60,14 @@ class ManifestProcess():
         # Add a definition for the filter func
         if self.filter_func is None:
             def filter(depot_id, depot_info):
-                filters_json = self.cdn.steam.get_settings_as_json()
+                if self.depot_id_whitelist is None:
+                    return True
 
-                for filter in filters_json['languages']:
-                    if re.search(filter, depot_info['name'], re.IGNORECASE):
-                        logger.info("Filter func: Removed %s", depot_info)
-                        return False
+                if depot_id in self.depot_id_whitelist:
+                    return True
 
-                for filter in filters_json['os_list']:
-                    if re.search(filter, depot_info['name'], re.IGNORECASE):
-                        logger.info("Filter func: Removed %s", depot_info)
-                        return False
-                    
-                return True
+                logger.info("[%s] Filtered out depot %s", self.target_app, depot_info)
+                return False
 
             self.filter_func = filter
 
