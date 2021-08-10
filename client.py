@@ -3,10 +3,11 @@ from steam.client.cdn import CDNClient
 import sqlite3
 from pathlib import Path
 from dl_handler import manifest_process_factory
-from multiprocessing import Process, Pipe
+from multiprocessing import Pipe
 import json
 from gevent import spawn
 from gevent.socket import wait_write, wait_read
+from db import query_builder
 from timelimits import TimeRange
 
 import time
@@ -57,7 +58,9 @@ class LocalSteamClient(SteamClient):
             create table if not exists apps (
                 app_id number PRIMARY KEY,
                 name text,
-                logo text
+                logo text,
+                oses test,
+                langs text
             )
         """)
 
@@ -67,7 +70,9 @@ class LocalSteamClient(SteamClient):
                 app_id number,
                 name text,
                 size number,
-                is_dlc bool
+                is_dlc bool,
+                oses text,
+                langs text
             )
         """)
 
@@ -127,8 +132,8 @@ class LocalSteamClient(SteamClient):
         if not p.exists():
             payload = {
                 'download_location': str(Path('./.downloads').resolve()),
-                'os_list': [],
-                'languages': [],
+                'os_list': ['windows'],
+                'languages': ['english'],
             }
 
             with open(p, 'w') as f:
@@ -235,8 +240,18 @@ class LocalSteamClient(SteamClient):
                 # Skip it I guess. . .
                 continue
 
+            # Evaluate os's and languages on the app level
+            try:
+                app_oses = item['common']['oslist']
+                app_langs_dict = item['common']['languages']
+                app_langs = ','.join(app_langs_dict.keys())
+
+            except KeyError:
+                app_oses = ''
+                app_langs = ''
+
             # add items to the app_list
-            app_list.append((app_id, name, logo))
+            app_list.append((app_id, name, logo, app_oses, app_langs))
 
             # Iterate over the depots
             try:
@@ -256,13 +271,23 @@ class LocalSteamClient(SteamClient):
                 except (ValueError, KeyError): # Skip the items that are not actually depots
                     #print(depots[d_id])
                     continue
+                
+                try:
+                    oses = depots[d_id]['config']['oslist']
+                except KeyError:
+                    oses = ''
 
-                depot_list.append((d_id, app_id, d_name, size, dlc))
+                try:
+                    langs = depots[d_id]['config']['language']
+                except KeyError:
+                    langs = ''
+
+                depot_list.append((d_id, app_id, d_name, size, dlc, oses, langs))
 
         # Out of the loop
         # Add the items to the database
-        self.db_conn.executemany("insert into apps VALUES(?, ?, ?)", app_list)
-        self.db_conn.executemany("insert into depots VALUES(?, ?, ?, ?, ?)", depot_list)
+        self.db_conn.executemany("insert into apps VALUES(?, ?, ?, ?, ?)", app_list)
+        self.db_conn.executemany("insert into depots VALUES(?, ?, ?, ?, ?, ?, ?)", depot_list)
         self.db_conn.commit()
 
         end = time.time()
@@ -287,12 +312,15 @@ class LocalSteamClient(SteamClient):
         name = self.db_conn.execute("select name from apps where app_id=?", (app_id,)).fetchone()[0]
         download_path = Path(download_path)
         download_path = download_path / str(name)
+
+        # Get the whitelist of depots for the app_id
+        depot_whitelist = self.get_filtered_depots_for_app(app_id)
         
         if self.cdn is None:
             self.cdn = CDNClient(self)
 
         #proc = Process(target=manifest_process_factory, args=(proc_conn, self.cdn, download_path,), kwargs={'timerange': time_range}, daemon=True)
-        proc = spawn(manifest_process_factory, proc_conn, self.cdn, download_path, timerange=time_range)
+        proc = spawn(manifest_process_factory, proc_conn, self.cdn, download_path, timerange=time_range, depot_whitelist=depot_whitelist)
         proc.start()
         local_conn.send(["download", app_id])
         
@@ -319,6 +347,36 @@ class LocalSteamClient(SteamClient):
             state.append((item[1], running))
 
         return state
+
+    def get_filtered_depots_for_app(self, app_id):
+        '''
+        Class method. Returns a list of depot id's that are visible with the current 
+        filters on both language and os.
+        '''
+        filter_vals = self.os_list[:]
+        oses_string = query_builder(
+            '(oses like ?',
+            'or oses like ?',
+            len(self.os_list) - 1,
+            " or oses='')"    
+        )
+
+        filter_vals.extend(self.languages[:])
+        langs_string = query_builder(
+            '(langs like ?',
+            'or langs like ?',
+            len(self.languages) - 1,
+            " or langs='')"    
+        )
+
+        query_string = "select depot_id from depots where app_id = ? and " + oses_string + " and " + langs_string + " collate nocase"
+        # select * from depots where app_id=? and ([oses like '%?[oses]%'] or oses like '') and (langs like '%?[langs]%' or langs like '') collate nocase
+
+        filter_vals = ['%' + i + '%' for i in filter_vals]
+        filter_vals.insert(0, int(app_id))
+
+        depot_info = list(sum(self.db_conn.execute(query_string, filter_vals).fetchall(), ()))
+        return depot_info
 
     def get_apps(self):
         '''
