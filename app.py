@@ -61,28 +61,21 @@ def app_page(app_id):
     '''
     db = get_db()
 
-    filter_vals = steam.os_list[:]
-    filter_vals.extend(steam.languages[:])
-
-    query_string = query_builder(
-        "select * from depots where app_id=? ",
-        "and name not like ? ",
-        len(filter_vals),
-        end='collate nocase'
-    )
-
-    filter_vals = ['%' + i + '%' for i in filter_vals]
-    filter_vals.insert(0, int(app_id))
-
-    depot_info = db.execute(query_string, filter_vals).fetchall()
-
     #depot_info = db.execute("select * from depots where app_id=? and is_dlc=0 and name not like '%Linux' and name not like '%Mac%'", (app_id,)).fetchall()
+    depot_ids = [app_id] + steam.get_filtered_depots_for_app(app_id)
+    query_string = query_builder(
+        "select * from depots where app_id=? and depot_id in (?",
+        ",?",
+        len(depot_ids) - 2,
+        ") collate nocase"
+    )
+    depot_info = db.execute(query_string, depot_ids)
     app_name = db.execute("select name from apps where app_id=?", (app_id,)).fetchone()
 
     d_out = []
     total_size = 0
     for d in depot_info:
-        depot_id, _, name, size, _ = d
+        depot_id, _, name, size, _, _, _ = d
         total_size += size
         size = human_readable(size)
         d_out.append((name, depot_id, size))
@@ -96,7 +89,7 @@ def schedule_download(app_id):
 
     Input:
     - Integer app_id -> app being targeted for download
-    - JSON TimeRange -> time range app can be downloaeded during.
+    - JSON TimeRange -> time range app can be downloaded during.
     '''
     # Get the JSON request from the website
     j = request.get_json()
@@ -173,6 +166,8 @@ def api_get_settings():
     # Return JSON data containing the settings that can be updated.
     payload = {
         "download_location": str(steam.download_location.resolve()),
+        "os_list": steam.os_list,
+        "languages": steam.languages,
     }
     return payload
 
