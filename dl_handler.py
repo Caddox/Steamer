@@ -8,23 +8,33 @@ from gevent.socket import wait_read, wait_write
 from gevent import sleep
 
 import logging
+
 logging.basicConfig(
-    format='[%(asctime)s] === %(levelname)s === %(message)s',
-    datefmt='%m/%d/%Y - %I:%M:%S',
-    filename='log.txt',
-    encoding='utf-8',
-    level=logging.INFO
+    format="[%(asctime)s] === %(levelname)s === %(message)s",
+    datefmt="%m/%d/%Y - %I:%M:%S",
+    filename="log.txt",
+    encoding="utf-8",
+    level=logging.INFO,
 )
 logger = logging
 
-class ManifestProcess():
-    '''
+
+class ManifestProcess:
+    """
     Class used for wrapping the steam manifest download process.
-    '''
-    def __init__(self, pipe, cdn, download_path, timerange=TimeRange(0, 0, 0, 0), depot_whitelist=None):
-        '''
+    """
+
+    def __init__(
+        self,
+        pipe,
+        cdn,
+        download_path,
+        timerange=TimeRange(0, 0, 0, 0),
+        depot_whitelist=None,
+    ):
+        """
         Constructor method. Sets up the class object
-        '''
+        """
         self.pipe = pipe
         self.cdn = cdn
         self.download_path = download_path
@@ -37,9 +47,9 @@ class ManifestProcess():
         logger.info("Manifest Process object created")
 
     def download_app(self, app_id: int):
-        '''
+        """
         Class method. Attempts to download an app given an app id. Encapsulates the logic behind manifests.
-        '''
+        """
         print("Working on app: {}".format(app_id))
         logger.info("Working on app: %s", app_id)
         if self.time_range.inside_window():
@@ -59,6 +69,7 @@ class ManifestProcess():
 
         # Add a definition for the filter func
         if self.filter_func is None:
+
             def filter(depot_id, depot_info):
                 if self.depot_id_whitelist is None:
                     return True
@@ -81,16 +92,16 @@ class ManifestProcess():
                 self.handle_manifest(man)
 
     def pump_messages(self):
-        '''
+        """
         Class method. Because the download process exists within a gevent Greenlet, we can poll it with Pipes.
 
-        Commands: 
+        Commands:
             - 'stop' -> Stop the process from downloading.
             - 'start' -> Start the process downloading.
             - 'download' -> Tuple message; msg[1] is the app id to download.
 
         Note: While pumping messages, the system will begin downloading if it gets within the time window.
-        '''
+        """
         # Poll the pipe for new info
         while self.pipe.poll():
             wait_read(self.pipe.fileno())
@@ -105,7 +116,7 @@ class ManifestProcess():
                 self.target_app = msg[1]
                 self.download_app(msg[1])
 
-            elif msg == 'query':
+            elif msg == "query":
                 wait_write(self.pipe.fileno())
                 self.pipe.send(self.downloading)
 
@@ -119,11 +130,10 @@ class ManifestProcess():
         if not self.time_range.inside_window():
             self.downloading = False
 
-
     def handle_manifest(self, manifest):
-        '''
+        """
         Class method. Given a manifest, downloading the files from the steam sever.
-        '''
+        """
         base_path = Path(self.download_path)
 
         # Grab the file iterator
@@ -145,7 +155,7 @@ class ManifestProcess():
             # Build the file path
             fp = base_path / file.filename
 
-            # Check if the file exists 
+            # Check if the file exists
             if not fp.exists():
                 # Create the file if it does not
                 Path(fp.parents[0]).mkdir(parents=True, exist_ok=True)
@@ -161,10 +171,12 @@ class ManifestProcess():
 
                 # Verify the sha1 hash of the file
                 try:
-                    with open(fp, 'rb') as f:
+                    with open(fp, "rb") as f:
                         # Ensure we are seeking over actual data, as in the offset does not exceed the filesize
                         # because that's undefined behavior in python! For some reason.
-                        max_offset = f.seek(0, 2) # Read the 0th byte from the end of the file
+                        max_offset = f.seek(
+                            0, 2
+                        )  # Read the 0th byte from the end of the file
                         f.seek(0)
 
                         if chunk.offset < max_offset:
@@ -173,23 +185,29 @@ class ManifestProcess():
                             if sha1_hash(cur_data) == chunk.sha:
                                 # if the two are the same, we have the entire chunk!
                                 total_bytes += chunk.cb_original
-                                logger.debug("[%s] Chunk `%s` has the same hash as disk, skipping. . .", self.target_app, chunk.sha.hex())
+                                logger.debug(
+                                    "[%s] Chunk `%s` has the same hash as disk, skipping. . .",
+                                    self.target_app,
+                                    chunk.sha.hex(),
+                                )
                                 continue
                 except FileNotFoundError:
                     pass
 
                 # get the chunk data from the cdn
-                data = self.cdn.get_chunk(manifest.app_id, manifest.depot_id, chunk.sha.hex())
+                data = self.cdn.get_chunk(
+                    manifest.app_id, manifest.depot_id, chunk.sha.hex()
+                )
                 logger.debug(
                     "[%s] Got data for chunk `%s` from server (%s of %s bytes)",
                     self.target_app,
                     chunk.sha.hex(),
                     human_readable(total_bytes),
-                    human_readable(file.size)
+                    human_readable(file.size),
                 )
 
-                #Write the data to the file
-                with open(fp, 'a+b') as f:
+                # Write the data to the file
+                with open(fp, "a+b") as f:
                     f.seek(chunk.offset)
                     f.write(data)
 
@@ -197,11 +215,11 @@ class ManifestProcess():
 
 
 def manifest_process_factory(*args, **kwargs):
-    '''
+    """
     Wrapper function used to create a new process. *args and **kwargs are passed directly into
     the ManifestProcess constructor. It will then sleep and pump the messages for the process until
     something occurs it needs to handle.
-    '''
+    """
     p = ManifestProcess(*args, **kwargs)
 
     while p.alive:
