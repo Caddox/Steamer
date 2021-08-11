@@ -49,7 +49,7 @@ You will then be prompted to log into your Steam Account.
 ## Settings ##
 The settings page includes a download path, and filters for OS and Languages. 
 
-*Any entries in the OS Filter or Language Filter are **excluded** when downloading games*. 
+Adding a language or OS to the filters will mark it for downloading when you go to download a game, so be sure to include the ones you want!
 
 Be sure to setup the download path to wherever you want -- like an external hard drive with the space you need.
 
@@ -74,19 +74,30 @@ First, exit Steam. Copy the game files from the server into wherever your `Steam
 
 **I copied the files like you said, but Steam still wants to download something. What did I do wrong?**
 
-Probably nothing. There are some files Steam will sometimes re-download when verifying the files (mostly *.exe files). Luckily, the assets of the game are often much larger than the *.exe itself. Additionally, the game may have updated since you downloaded it with Steamer, requiring Steam itself to update the game. In rare cases, you may have added a filter that removed an important depot.
+Probably nothing. There are some files Steam will sometimes re-download when going through the process of verifying the files (mostly *.exe files). Luckily, the assets of the game are often much larger than the *.exe itself. Additionally, the game may have updated since you downloaded it with Steamer, requiring Steam itself to update the game. 
 
 #
 
 **I noticed that a game I downloaded using Steamer and the same game I already had on my PC are different sizes. What's up with that?**
 
-When viewing a game, almost all the depots listed will be downloaded (excluding DLC's you don't own). If you missed a language with the language filter, you probably downloaded that languages depot unintentionally. This is something I am looking to fix.
+Steamer will try to only download depots that meet your settings, but sometimes naughty game developers do not set a config in their depot. If a depot is encountered that does not have a language or target OS defined, it will default to being downloading.
+
+Normally, this isn't an issue. Sometimes, it is.
+
+Another potential reason: during testing, I noticed that interrupting the download and restarting it caused some files to balloon in size. I believe this has something to do with append mode. I will get a better look at this eventually.
 
 #
 
 **Can I use Steamer to update my games?**
 
 Theoretically, sure. It was not built with this in mind, however, so let me know if something goes wrong.
+
+#
+
+
+**Why are there so many games that I don't own showing up?**
+
+Steamer lists all the *apps* you own, not just games. This means that some rather odd things get included that may not show up normally on Steam. Technically, you still own those items. Feel free to ignore them.
 
 #
 
