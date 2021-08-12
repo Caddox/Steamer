@@ -10,7 +10,7 @@ This application exists for several reasons:
 
 ## Installation ##
 ### Prerequisites ###
-`Python>=3.5`. I don't have an exact version required, so you may be able to get away with less. 
+`Python>=3.5`. I don't have an exact version required, so you may be able to get away with less. Just not Python 2.
 
 The steam client emulator we are using requires [Gevent](https://www.gevent.org/install.html), so be sure you have whatever it requires. For the RPI4, it requires binaries for `make`, `gcc`, and probably `cc`. If you run into issues when you're installing pip packages, this is probably why.
 
@@ -47,7 +47,7 @@ localhost:5000
 You will then be prompted to log into your Steam Account.
 
 ## Settings ##
-The settings page includes a download path, and filters for OS and Languages. 
+The settings page includes a download path, and filters for OS and Languages. By default, the download path with resolve to `Steamer/.downloads/`, the language will be set to English, and the valid OS's will be set to Windows. 
 
 Adding a language or OS to the filters will mark it for downloading when you go to download a game, so be sure to include the ones you want!
 
@@ -57,6 +57,12 @@ Be sure to setup the download path to wherever you want -- like an external hard
 **You seem to have a pretty specific use case; why should I do it your way?**
 
 You don't have to; this is just another option available to you. There are many different tools built for Steam, such as Bot Traders, local Steam Caching servers, and even tools to idle in games for Steam Trading Cards. The closest thing to this is probably [steamctl](https://github.com/ValvePython/steamctl), which is another option if you like using the command line for everything. (Fun fact: Steamer started life as a wrapper for steamctl!)
+
+#
+
+**The timestamp in the log file and the actual time is compleatly different! Why?**
+
+Python's `time` module accesses the time given by the Operating System. If you are running a Raspberry Pi or another flavor of Linux, be sure to set your Timezone correctly. Otherwise, the program will operate off of GMT, which (unless you live in the Greenwich Mean Time zone) is probably not what you want. (Hint: on Linux, look up `timedatectl`)
 
 #
 
