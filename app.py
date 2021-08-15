@@ -68,12 +68,21 @@ def app_page(app_id):
 
     # depot_info = db.execute("select * from depots where app_id=? and is_dlc=0 and name not like '%Linux' and name not like '%Mac%'", (app_id,)).fetchall()
     depot_ids = [app_id] + steam.get_filtered_depots_for_app(app_id)
-    query_string = query_builder(
-        "select * from depots where app_id=? and depot_id in (?",
-        ",?",
-        len(depot_ids) - 2,
-        ") collate nocase",
-    )
+
+    # Change the behavior for the case where no depots can be selected.
+    unable_to_download = False
+    if len(depot_ids) == 1:
+        query_string = "select * from depots where app_id=? collate nocase"
+        unable_to_download = True
+
+    else:
+        query_string = query_builder(
+            "select * from depots where app_id=? and depot_id in (?",
+            ",?",
+            len(depot_ids) - 2,
+            ") collate nocase",
+        )
+
     depot_info = db.execute(query_string, depot_ids)
     app_name = db.execute("select name from apps where app_id=?", (app_id,)).fetchone()
 
@@ -90,6 +99,7 @@ def app_page(app_id):
         depots=d_out,
         total_size=human_readable(total_size),
         app_name=app_name["name"],
+        unable_to_download=unable_to_download,
     )
 
 

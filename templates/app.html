@@ -17,27 +17,46 @@
         <div id='steamer-app-name'>
             <span>Working on {{app_name}}</span>
         </div>
-        <table id="steamer-game-table">
-            <tr>
-                <th>Depot name</th>
-                <th>Download size</th>
-            </tr>
-            {% for d in depots: %}
-            <tr id="steamer-table-row">
-                <th>{{d[0]}}</th>
-                <th>{{d[2]}}</th>
-            </tr>
-            {% endfor %}
-        </table>
-        <h1>{{total_size}}</h1>
+        {% if unable_to_download == False %}
+            <table id="steamer-game-table">
+                <tr>
+                    <th>Depot name</th>
+                    <th>Download size</th>
+                </tr>
+                {% for d in depots: %}
+                <tr id="steamer-table-row">
+                    <th>{{d[0]}}</th>
+                    <th>{{d[2]}}</th>
+                </tr>
+                {% endfor %}
+            </table>
+            <h1>{{total_size}}</h1>
 
-        <form >
-            <label for='start_time'>Start Time</label>
-            <input id='steamer-start-time' type="time" name="start_time" value="23:00">
-            <label for='end_time'>End Time</label>
-            <input id='steamer-end-time' type="time" name="end_time" value="04:30">
+            <form >
+                <label for='start_time'>Start Time</label>
+                <input id='steamer-start-time' type="time" name="start_time" value="23:00">
+                <label for='end_time'>End Time</label>
+                <input id='steamer-end-time' type="time" name="end_time" value="04:30">
 
-            <button id="steamer-setup-download-submit" type="button">Setup download</button>
-        </form>
+                <button id="steamer-setup-download-submit" type="button">Setup download</button>
+            </form>
+
+        {% else %}
+            <h1>Hmm...</h1>
+            <p>Looks like the filters you have applied in your settings have filtered out all the depots from this app!</p>
+            <p>As it stands, you will be unable to download anything from here for now.</p>
+            <p>Navigate to your settings to and see what you can change.</p>
+
+            <h3>Depots available to this app:</h3>
+            {% if depots|length == 0 %}
+                <span>None.</span>
+                {% else %}
+                {% for d in depots: %}
+                <tr>
+                    <th>{{d}}</th>
+                </tr>
+                {% endfor %}
+            {% endif %}
+        {% endif %}
     </body>
 </html>
