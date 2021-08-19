@@ -61,6 +61,7 @@ class LocalSteamClient(SteamClient):
                 app_id number PRIMARY KEY,
                 name text,
                 logo text,
+                dl_dir text,
                 oses test,
                 langs text
             )
@@ -267,8 +268,14 @@ class LocalSteamClient(SteamClient):
                 app_oses = ""
                 app_langs = ""
 
+            # Get the name of the download directory for the game
+            try:
+                dl_dir = item["config"]["installdir"]
+            except KeyError:
+                dl_dir = name
+
             # add items to the app_list
-            app_list.append((app_id, name, logo, app_oses, app_langs))
+            app_list.append((app_id, name, logo, dl_dir, app_oses, app_langs))
 
             # Iterate over the depots
             try:
@@ -306,7 +313,7 @@ class LocalSteamClient(SteamClient):
 
         # Out of the loop
         # Add the items to the database
-        self.db_conn.executemany("insert into apps VALUES(?, ?, ?, ?, ?)", app_list)
+        self.db_conn.executemany("insert into apps VALUES(?, ?, ?, ?, ?, ?)", app_list)
         self.db_conn.executemany(
             "insert into depots VALUES(?, ?, ?, ?, ?, ?, ?)", depot_list
         )
@@ -333,11 +340,11 @@ class LocalSteamClient(SteamClient):
             download_path = self.download_location
 
         # Grab the game's name to put as the filepath like Steam does.
-        name = self.db_conn.execute(
-            "select name from apps where app_id=?", (app_id,)
+        dl_dir = self.db_conn.execute(
+            "select dl_dir from apps where app_id=?", (app_id,)
         ).fetchone()[0]
         download_path = Path(download_path)
-        download_path = download_path / str(name)
+        download_path = download_path / str(dl_dir)
 
         # Get the whitelist of depots for the app_id
         depot_whitelist = self.get_filtered_depots_for_app(app_id)
