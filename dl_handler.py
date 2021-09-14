@@ -191,6 +191,7 @@ class ManifestProcess:
                                     chunk.sha.hex(),
                                 )
                                 continue
+
                 except FileNotFoundError:
                     pass
 
@@ -207,7 +208,7 @@ class ManifestProcess:
                 )
 
                 # Write the data to the file
-                with open(fp, "a+b") as f:
+                with open(fp, "r+b") as f:
                     f.seek(chunk.offset)
                     f.write(data)
 
