@@ -193,7 +193,9 @@ class ManifestProcess:
                                 continue
 
                 except FileNotFoundError:
-                    pass
+                    # Create the file if it does not exist
+                    with open(fp, "wb"):
+                        pass
 
                 # get the chunk data from the cdn
                 data = self.cdn.get_chunk(
