@@ -27,5 +27,9 @@ $(document).ready(function() {
             type: 'POST',
 
         });
+
+        // grab the button and make it say the download has been queued.
+        $("#steamer-setup-download-submit").prop("disabled", true);
+        $("#steamer-setup-download-submit").text("Download queued.");
     });
 });

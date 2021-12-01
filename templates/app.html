@@ -38,7 +38,12 @@
                 <label for='end_time'>End Time</label>
                 <input id='steamer-end-time' type="time" name="end_time" value="04:30">
 
-                <button id="steamer-setup-download-submit" type="button">Setup download</button>
+                {% if queued %}
+                    <button id="steamer-setup-download-submit" type="button" disabled="true">Download Queued</button>
+                {% else %}
+                    <button id="steamer-setup-download-submit" type="button">Setup download</button>
+                {% endif %}
+
             </form>
 
         {% else %}

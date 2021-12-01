@@ -94,12 +94,19 @@ def app_page(app_id):
         size = human_readable(size)
         d_out.append((name, depot_id, size))
 
+    # Check if the game is already queued for download.
+    queued = False
+    for proc in steam.process_list:
+        if proc[1] == app_id:
+            queued = True
+
     return render_template(
         "app.html",
         depots=d_out,
         total_size=human_readable(total_size),
         app_name=app_name["name"],
         unable_to_download=unable_to_download,
+        queued=queued,
     )
 
 
