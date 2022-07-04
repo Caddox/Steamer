@@ -287,16 +287,17 @@ class LocalSteamClient(SteamClient):
             for d_id in depots.keys():
                 try:
                     int(d_id)
-                    d_name = depots[d_id]["name"]
+                    try:
+                        d_name = depots[d_id]["name"]
+                    except KeyError:
+                        print("Note: Depot ID", d_id, "had no name, making one up. . .")
+                        d_name = "unknown_depot_" + str(d_id)
                     size = depots[d_id]["maxsize"]
                     dlc = False
                     if "dlcappid" in depots[d_id].keys():
                         dlc = True
-                except (
-                    ValueError,
-                    KeyError,
-                ):  # Skip the items that are not actually depots
-                    # print(depots[d_id])
+                except (ValueError,):  # Skip the items that are not actually depots
+                    print("Depot insert error: ", depots[d_id])
                     continue
 
                 try:
@@ -403,13 +404,16 @@ class LocalSteamClient(SteamClient):
             "(langs like ?", "or langs like ?", len(self.languages) - 1, " or langs='')"
         )
 
-        query_string = (
-            "select depot_id from depots where app_id = ? and "
-            + oses_string
-            + " and "
-            + langs_string
-            + " collate nocase"
-        )
+        query_string = "select depot_id from depots where app_id = ? "
+        if len(self.os_list) > 0:
+            query_string += " and " + oses_string
+        if len(self.os_list) > 0 and len(self.languages) > 0:
+            query_string += " and " + langs_string
+        elif len(self.languages) > 0 and len(self.os_list) < 1:
+            query_string += " " + langs_string
+
+        query_string += " collate nocase"
+
         # select * from depots where app_id=? and ([oses like '%?[oses]%'] or oses like '') and (langs like '%?[langs]%' or langs like '') collate nocase
 
         filter_vals = ["%" + i + "%" for i in filter_vals]
