@@ -252,11 +252,20 @@ class LocalSteamClient(SteamClient):
             # Populate some variables
             try:
                 name = item["common"]["name"]
-                logo = item["common"]["logo"]
 
             except KeyError:
                 # Skip it I guess. . .
                 continue
+
+            try:
+                logo = item["common"]["logo"]
+            except KeyError:
+                # fallback to the icon (smaller, but not an erro)
+                try:
+                    logo = item["common"]["icon"]
+                except KeyError:
+                    # aaait f*** it
+                    continue
 
             # Evaluate os's and languages on the app level
             try:
@@ -284,19 +293,48 @@ class LocalSteamClient(SteamClient):
                 # print(apps['apps'][app_id])
                 continue
 
+            print("==> Working on: ", apps["apps"][app_id]["depots"])
             for d_id in depots.keys():
                 try:
-                    int(d_id)
-                    try:
-                        d_name = depots[d_id]["name"]
-                    except KeyError:
-                        print("Note: Depot ID", d_id, "had no name, making one up. . .")
-                        d_name = "unknown_depot_" + str(d_id)
-                    size = depots[d_id]["maxsize"]
-                    dlc = False
+                    _ = int(d_id)  # intentionally discarded
+
+                    # Do the DLC first to avoid issues with using the variable before it's assigned
                     if "dlcappid" in depots[d_id].keys():
                         dlc = True
-                except (ValueError,):  # Skip the items that are not actually depots
+                    else:
+                        dlc = False
+
+                    # The depot name is no longer included in the protobuf.
+                    # We need a better way of listing what the content actually is,
+                    # so I need to figure out a better naming scheme
+
+                    try:
+                        d_lang = depots[d_id]["config"]["language"]
+                        if d_lang != "":
+                            d_name = name
+                        else:
+                            d_name = name + "({})".format(d_lang)
+
+                    except:
+                        print("FUCK")
+                        print(d_id)
+                        d_name = name + " (unknown {})".format(str(d_id))
+
+                    # So this is apperently optional now?
+                    try:
+                        size = depots[d_id]["manifests"]["public"]["size"]
+                    except KeyError:
+                        print(
+                            "Failed to find max size for depot `",
+                            d_name,
+                            "`, setting it to 0",
+                        )
+                        size = 0
+
+                except (
+                    ValueError,
+                    KeyError,
+                ):  # Skip the items that are not actually depots
                     print("Depot insert error: ", depots[d_id])
                     continue
 
