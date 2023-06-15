@@ -139,10 +139,9 @@ class ManifestProcess:
         # Grab the file iterator
         file_list_iterator = manifest.iter_files()
 
-        total_bytes = 0
-
         for file in file_list_iterator:
-            logger.debug("[%s] Getting file %s", self.target_app, file)
+            total_bytes = 0
+            logger.info("[%s] Getting file %s", self.target_app, file)
 
             # Check if there are any messages in the pipe
             self.pump_messages()
@@ -185,7 +184,7 @@ class ManifestProcess:
                             if sha1_hash(cur_data) == chunk.sha:
                                 # if the two are the same, we have the entire chunk!
                                 total_bytes += chunk.cb_original
-                                logger.debug(
+                                logger.info(
                                     "[%s] Chunk `%s` has the same hash as disk, skipping. . .",
                                     self.target_app,
                                     chunk.sha.hex(),
@@ -201,7 +200,7 @@ class ManifestProcess:
                 data = self.cdn.get_chunk(
                     manifest.app_id, manifest.depot_id, chunk.sha.hex()
                 )
-                logger.debug(
+                logger.info(
                     "[%s] Got data for chunk `%s` from server (%s of %s bytes)",
                     self.target_app,
                     chunk.sha.hex(),
