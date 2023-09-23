@@ -27,7 +27,10 @@ class LocalSteamClient(SteamClient):
         """
         self.db_conn = None
         SteamClient.__init__(self, *args, **kwargs)
-        self.set_credential_location(".")
+        self.set_credential_location(
+            "."
+        )  # NOTE: This should be useless now that Steam no longer uses sentry files for persistant login, but w/e, it stays
+        # see https://github.com/DoctorMcKay/node-steam-user/releases/tag/v4.29.0 for info
 
         self.download_location: Path = Path(".")
         self.os_list = []
@@ -35,11 +38,6 @@ class LocalSteamClient(SteamClient):
         self.load_settings_from_file("settings.json")
 
         self.init_db()
-        try:
-            self.db_login()
-        except:
-            pass
-        # self.force_login()
         if self.logged_on:
             self.cdn = CDNClient(self)
         else:
@@ -82,8 +80,6 @@ class LocalSteamClient(SteamClient):
         """
         )
 
-        self.db_conn.execute("create table if not exists users (user text, pass text)")
-
         self.db_conn.commit()
 
     def force_login(self):
@@ -98,47 +94,6 @@ class LocalSteamClient(SteamClient):
             self.relogin()
         else:
             self.cli_login()
-
-    def db_login(self):
-        """
-        Class method. Queries the database to see if there is a username and password saved.
-        If there is, it attempts to login with them.
-        """
-        user, password = self.db_conn.execute("select user, pass from users").fetchone()
-        # Try to login
-        self.login(user, password)
-
-    def add_login_to_db(self, username: str, password: str):
-        """
-        Class method. Addes the table of users, then adds the username and password to the database.
-
-        Really not a good idea, being plaintext and all, but I can't find another option.
-        """
-        # Create the user table
-        self.db_conn.execute("create table if not exists users (user text, pass text)")
-
-        # Check the table for the user
-        if (
-            self.db_conn.execute(
-                "select user from users where user=?", (username,)
-            ).fetchone()
-            is not None
-        ):
-            # Run the db_login?
-            self.db_login()
-            if self.logged_on is False:
-                print("Data was saved, but the logon failed?")
-
-        # Add the user to the table
-        self.db_conn.execute(
-            "insert or ignore into users VALUES (?, ?)",
-            (
-                username,
-                password,
-            ),
-        )
-
-        self.db_conn.commit()
 
     def load_settings_from_file(self, filepath):
         """
@@ -207,7 +162,6 @@ class LocalSteamClient(SteamClient):
 
         # Ensure the client is logged in
         if not self.logged_on and self.relogin_available:
-            self.db_login()
             self.relogin()
             self.cdn = CDNClient(self)
 

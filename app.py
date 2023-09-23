@@ -196,9 +196,6 @@ def api_try_login():
             "target": "steam",
         }
 
-    # If we're good, try to add the user and pass to the database
-    steam.add_login_to_db(j["username"], j["password"])
-
     return {"success": True}
 
 
