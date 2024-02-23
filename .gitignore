@@ -3,6 +3,8 @@
 *.json
 
 __pycache__/*
+venv/*
 
 standalone.py
 log.txt
+nohup.out

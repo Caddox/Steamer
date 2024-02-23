@@ -1,0 +1,15 @@
+--- cdn_old.py	2024-02-22 15:28:13.903798157 -0800
++++ cdn.py	2024-02-22 15:30:10.361915740 -0800
+@@ -836,6 +836,12 @@
+             else:
+                 manifest_gid = depot_info.get('manifests', {}).get(branch)
+ 
++            if isinstance(manifest_gid, dict):
++                # For some depots, Steam has started returning a dict
++                # {"public": {"gid": GID, "size": ..., "download": ...}, ...}
++                # instead of a simple map {"public": GID, ...}
++                manifest_gid = manifest_gid['gid']
++
+             if manifest_gid is not None:
+                 tasks.append(
+                     self.gpool.spawn(
