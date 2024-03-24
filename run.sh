@@ -1,13 +1,22 @@
+#!/usr/bin/bash
+
+# Check for any lazy distros who haven't migrated away from the sunset python 2
+if [ -x "$(command -v python3)" ]; then
+  PYTHON=python3
+else
+  PYTHON=python
+fi
+
 if [ -d ./venv ]; then
   echo "Found Python venv"
 else
   echo "No present python venv, generating. . ."
-  python -m venv venv
+  $PYTHON -m venv venv
 
   # activate the venv, and install packages with pip
   echo "Installing packages. . ."
   source ./venv/bin/activate
-  python -m pip install -r requirements.txt  
+  $PYTHON -m pip install -r requirements.txt  
 
   # grab the python path version
   PYTHON_VER=$(python --version | tr "[:upper:]" "[:lower:]" | tr -d " " | cut -f1-2 -d ".")
@@ -27,7 +36,7 @@ fi
 echo "Starting the server. . ."
 source ./venv/bin/activate
 
-nohup python -m flask run --host=0.0.0.0 &
+nohup $PYTHON -m flask run --host=0.0.0.0 &
 echo "Server is running."
 
 deactivate
