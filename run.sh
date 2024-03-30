@@ -19,7 +19,7 @@ else
   $PYTHON -m pip install -r requirements.txt  
 
   # grab the python path version
-  PYTHON_VER=$(python --version | tr "[:upper:]" "[:lower:]" | tr -d " " | cut -f1-2 -d ".")
+  PYTHON_VER=$($PYTHON --version | tr "[:upper:]" "[:lower:]" | tr -d " " | cut -f1-2 -d ".")
   echo $PYTHON_VER
 
   # patch python steam because it's broken
