@@ -1,6 +1,10 @@
 # Steamer #
 Steamer is a Flask app that allows you to download games overnight on slow connections utilizing an external server rather than your main PC (though, you can still use your main PC with it).
 
+This project is probably dead due to changes in the Python steam library (which hasn't been updated in a year) and the code just straight up no longer logging you in.
+
+Like, it doesn't work and I'm tired of trying to make it work. Who knows.
+
 ## Why? ##
 This application exists for several reasons:
 
